@@ -253,3 +253,14 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
    because tests use SQLite.
 2. `frontend-build` — installs Node 20, runs `npm ci && npm run build`.
    Verifies that TypeScript compiles and Vite can produce a production bundle.
+---
+
+## 14. Task ownership (Day 2)
+
+**Rule:** a user can only see and change their own tasks.
+
+**Why 404, not 403:** another user's task returns the same 404 as a task that does not exist. A 403 would confirm that the id exists, which leaks information.
+
+**Why a task with runs cannot be deleted:** runs hold the recorded step traces, which are the whole point of the product. Deleting the task would either fail on the database foreign key or destroy that history, so the API returns 409 instead.
+
+**Why PUT replaces the whole task:** it avoids the ambiguity of partial updates (does "null" mean "clear this field" or "leave it alone?").
