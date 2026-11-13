@@ -282,3 +282,15 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why 202 Accepted:** the run is created and queued, but not finished when the response is sent. The client reads the result with GET /runs/{id}.
 
 **Known limitation:** if the runner itself crashes, the run is marked "failed" and the error is logged. That mixes up a system crash with an agent failure. A later version should add a separate "error" status.
+
+---
+
+## 16. Frontend sign-in (Day 3)
+
+**Where the token lives:** `localStorage`. It is simple, and it survives a page reload. The trade-off is that any script running on the page can read it, so a cross-site scripting (XSS) bug would leak the token. The safer alternative is an httpOnly cookie, which JavaScript cannot read, but that needs backend changes and protection against CSRF. React escapes text by default and this app never injects raw HTML, which reduces the XSS risk. Tokens also expire, so a stolen one stops working after a limited time (check the exact lifetime in the backend config before quoting a number).
+
+**Why the saved token is checked on load:** the app calls `/auth/me` before showing the signed-in screen. An expired token is cleared and the user lands on the sign-in form instead of seeing a broken page. A network error does not clear the token, so a refresh can recover.
+
+**Why no router and no chart library:** the app has only a few screens, and every new dependency changes `package-lock.json` and can break the CI install. Navigation uses plain state, and charts are drawn with CSS.
+
+**Known gap:** the 8-character minimum password is enforced only in the browser. Anyone calling the API directly can still register a shorter one. The backend should enforce it too.
