@@ -97,3 +97,22 @@ def get_run(
         **RunResponse.model_validate(run).model_dump(),
         steps=[RunStepResponse.model_validate(s) for s in steps],
     )
+
+@router.get("/runs", response_model=list[RunResponse], summary="List my runs")
+def list_runs(
+    task_id: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[Run]:
+    """Return the current user's runs, newest first.
+
+    Pass ``?task_id=`` to list only the runs of one task.
+    """
+    query = (
+        db.query(Run)
+        .join(Task, Run.task_id == Task.id)
+        .filter(Task.created_by == current_user.id)
+    )
+    if task_id is not None:
+        query = query.filter(Run.task_id == task_id)
+    return query.order_by(Run.id.desc()).all()

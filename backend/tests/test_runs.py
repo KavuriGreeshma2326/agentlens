@@ -174,3 +174,31 @@ def test_task_with_runs_cannot_be_deleted(client):
     _start(client, h, task_id)
     assert client.delete(f"/tasks/{task_id}", headers=h).status_code == 409
     assert client.get(f"/tasks/{task_id}", headers=h).status_code == 200
+
+# -- Listing runs -----------------------------------------------------------
+
+
+def test_list_runs_returns_only_own_runs_newest_first(client):
+    a = _headers(client, "a@example.com")
+    b = _headers(client, "b@example.com")
+    task_a = _make_task(client, a)
+    first = _start(client, a, task_a).json()["id"]
+    second = _start(client, a, task_a).json()["id"]
+    _start(client, b, _make_task(client, b))
+    ids = [r["id"] for r in client.get("/runs", headers=a).json()]
+    assert ids == [second, first]
+
+
+def test_list_runs_can_filter_by_task(client):
+    h = _headers(client, "a@example.com")
+    task_1 = _make_task(client, h)
+    task_2 = _make_task(client, h)
+    _start(client, h, task_1)
+    _start(client, h, task_2)
+    runs = client.get(f"/runs?task_id={task_1}", headers=h).json()
+    assert len(runs) == 1
+    assert runs[0]["task_id"] == task_1
+
+
+def test_list_runs_without_token_returns_401(client):
+    assert client.get("/runs").status_code == 401
