@@ -264,3 +264,21 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why a task with runs cannot be deleted:** runs hold the recorded step traces, which are the whole point of the product. Deleting the task would either fail on the database foreign key or destroy that history, so the API returns 409 instead.
 
 **Why PUT replaces the whole task:** it avoids the ambiguity of partial updates (does "null" mean "clear this field" or "leave it alone?").
+
+---
+
+## 15. Mock agent and background runs (Day 2)
+
+**Why a mock agent:** real LLM calls cost money, are slow, and give different answers each time. The product is the evaluation and diagnosis layer, so the mock agent produces traces with known failure patterns. The runner is the only place that changes when a real model is added later.
+
+**Why the trace is seeded:** the same task and agent version always give the same trace. That keeps tests stable and makes comparing agent versions fair.
+
+**Why the failure type is not stored:** the Day 4 diagnosis must work out the cause from the steps alone. Storing the label would make the diagnosis fake.
+
+**Why BackgroundTasks, not a job queue:** the mock agent finishes in milliseconds, so a queue (Redis, a worker) would add moving parts for no benefit. The limit: if the server restarts in the middle of a run, that run stays "running". A real agent would need a proper queue.
+
+**Why the runner opens its own database session:** the request's session is closed once the response is sent, so background work cannot reuse it.
+
+**Why 202 Accepted:** the run is created and queued, but not finished when the response is sent. The client reads the result with GET /runs/{id}.
+
+**Known limitation:** if the runner itself crashes, the run is marked "failed" and the error is logged. That mixes up a system crash with an agent failure. A later version should add a separate "error" status.
