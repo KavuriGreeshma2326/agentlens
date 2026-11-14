@@ -306,3 +306,15 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why there is no delete button:** the backend refuses to delete a task that has runs, to protect the recorded traces. A button that mostly shows an error would be worse than no button.
 
 **Known gap:** if the login token expires while the page is open, requests start failing and the error banner appears. Reloading signs you out. A later step should catch the 401 and return to the sign-in screen automatically.
+
+---
+
+## 18. Run trace viewer and hash routes (Day 3)
+
+**Why hash routes (`#/runs/5`) and no router library:** the browser never sends the hash to the server, so the app works on plain static hosting without rewrite rules. Refreshing a trace page keeps you on it, the back button works, and a link to one run can be shared. A router library would add a dependency and a lockfile change.
+
+**Why the viewer shows expected output next to the final answer:** a failed run is only understandable when you can see what the agent was supposed to produce. This comparison is also the first signal the Day 4 diagnosis will use.
+
+**Why each step has a latency bar:** the bar is scaled to the slowest step, so you can see where the time went at a glance. Absolute numbers are in the text beside it.
+
+**Why error lines are red:** a tool result starting with "Error:" is the clearest sign of a wrong tool call, so the viewer makes it stand out. The Day 4 diagnosis will name it formally.

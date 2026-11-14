@@ -1,5 +1,5 @@
 import { apiRequest } from './api'
-import type { Difficulty, Run, Task } from './types'
+import type { Difficulty, Run, RunDetail, Task } from './types'
 
 export interface NewTask {
   name: string
@@ -12,6 +12,10 @@ export function listTasks(): Promise<Task[]> {
   return apiRequest<Task[]>('/tasks')
 }
 
+export function getTask(taskId: number): Promise<Task> {
+  return apiRequest<Task>(`/tasks/${taskId}`)
+}
+
 export function createTask(task: NewTask): Promise<Task> {
   return apiRequest<Task>('/tasks', {
     method: 'POST',
@@ -21,6 +25,10 @@ export function createTask(task: NewTask): Promise<Task> {
 
 export function listRuns(): Promise<Run[]> {
   return apiRequest<Run[]>('/runs')
+}
+
+export function getRun(runId: number): Promise<RunDetail> {
+  return apiRequest<RunDetail>(`/runs/${runId}`)
 }
 
 export function startRun(taskId: number, agentVersion: string): Promise<Run> {

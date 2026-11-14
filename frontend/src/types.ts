@@ -21,3 +21,18 @@ export interface Run {
   created_at: string | null
   completed_at: string | null
 }
+
+export type StepType = 'thought' | 'tool_call' | 'tool_result' | 'final'
+
+export interface RunStep {
+  id: number
+  step_number: number
+  step_type: StepType
+  content: string | null
+  latency_ms: number
+  tokens: number
+}
+
+export interface RunDetail extends Run {
+  steps: RunStep[]
+}

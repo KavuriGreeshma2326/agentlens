@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import AuthScreen from './AuthScreen'
+import RunDetailPage from './RunDetailPage'
 import TasksPage from './TasksPage'
 import { ApiError, clearToken, getCurrentUser, getToken, setToken } from './api'
 import type { User } from './api'
+import { useHash } from './useHash'
 
 type Session =
   | { kind: 'checking' }
@@ -65,11 +67,19 @@ function SignedInLayout({
   email: string
   onLogout: () => void
 }) {
+  // Routes use the URL hash (for example "#/runs/5"). The hash is never sent
+  // to the server, so this works on static hosting without extra setup.
+  const hash = useHash()
+  const match = /^#\/runs\/(\d+)$/.exec(hash)
+  const runId = match ? Number(match[1]) : null
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <header className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
         <h1 className="text-xl font-black tracking-tight text-white">
-          Agent<span className="text-indigo-400">Lens</span>
+          <a href="#/">
+            Agent<span className="text-indigo-400">Lens</span>
+          </a>
         </h1>
         <div className="flex items-center gap-4 text-sm">
           <span className="text-gray-400">{email}</span>
@@ -84,7 +94,11 @@ function SignedInLayout({
       </header>
 
       <main>
-        <TasksPage />
+        {runId === null ? (
+          <TasksPage />
+        ) : (
+          <RunDetailPage key={runId} runId={runId} />
+        )}
       </main>
     </div>
   )

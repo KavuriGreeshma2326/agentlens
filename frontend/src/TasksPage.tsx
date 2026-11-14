@@ -173,10 +173,13 @@ export default function TasksPage() {
                       className="flex items-center justify-between gap-4 px-5 py-4"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm text-gray-100">
+                        <a
+                          href={`#/runs/${run.id}`}
+                          className="block truncate text-sm text-gray-100 hover:text-indigo-300 hover:underline"
+                        >
                           #{run.id}{' '}
                           {taskNames.get(run.task_id) ?? `Task ${run.task_id}`}
-                        </p>
+                        </a>
                         <p className="mt-0.5 text-xs text-gray-500">
                           {run.agent_version} - {formatCost(run.total_cost)} -{' '}
                           {formatLatency(run.total_latency_ms)} -{' '}
