@@ -334,3 +334,15 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why stats are computed when requested:** the app has a small amount of data, so calculating pass rates and failure counts on each request is simple and always current. At a larger scale these would be cached or precomputed.
 
 **Why the four main failure labels always appear in the stats:** the dashboard can draw a stable chart with zero-height bars instead of handling missing keys.
+
+---
+
+## 20. Failure autopsy card and dashboard (Day 4)
+
+**Why highlight the evidence steps:** a label alone ("wrong tool") asks the reader to trust it. Highlighting the exact steps the rule used lets anyone check the diagnosis against the trace in seconds.
+
+**Why charts are plain CSS bars:** the dashboard has two small charts. A chart library would add a dependency, a lockfile change and bundle weight for something a styled div can do.
+
+**Why the small-sample warning:** with a handful of runs per version, a gap in pass rate can easily be chance. The dashboard says so below 20 finished runs per version instead of presenting a weak result as a finding.
+
+**What the dashboard result means:** `mock-v2` passes more often than `mock-v1` because the mock agent was written that way. It shows that the comparison works, not that one real agent beats another. A real comparison needs real agents.

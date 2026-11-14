@@ -1,5 +1,5 @@
 import { apiRequest } from './api'
-import type { Difficulty, Run, RunDetail, Task } from './types'
+import type { Difficulty, Run, RunDetail, Stats, Task } from './types'
 
 export interface NewTask {
   name: string
@@ -36,4 +36,8 @@ export function startRun(taskId: number, agentVersion: string): Promise<Run> {
     method: 'POST',
     body: JSON.stringify({ agent_version: agentVersion }),
   })
+}
+
+export function getStats(): Promise<Stats> {
+  return apiRequest<Stats>('/stats')
 }

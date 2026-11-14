@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { ReactElement } from 'react'
 import AuthScreen from './AuthScreen'
+import DashboardPage from './DashboardPage'
 import RunDetailPage from './RunDetailPage'
 import TasksPage from './TasksPage'
 import { ApiError, clearToken, getCurrentUser, getToken, setToken } from './api'
@@ -60,6 +62,12 @@ export default function App() {
   return <SignedInLayout email={session.user.email} onLogout={handleLogout} />
 }
 
+function navClass(active: boolean): string {
+  return active
+    ? 'font-medium text-white'
+    : 'text-gray-400 hover:text-gray-200'
+}
+
 function SignedInLayout({
   email,
   onLogout,
@@ -67,20 +75,41 @@ function SignedInLayout({
   email: string
   onLogout: () => void
 }) {
-  // Routes use the URL hash (for example "#/runs/5"). The hash is never sent
-  // to the server, so this works on static hosting without extra setup.
+  // Routes use the URL hash (for example "#/runs/5" or "#/dashboard"). The
+  // hash is never sent to the server, so this works on static hosting
+  // without extra setup.
   const hash = useHash()
   const match = /^#\/runs\/(\d+)$/.exec(hash)
   const runId = match ? Number(match[1]) : null
+  const onDashboard = hash === '#/dashboard'
+
+  let page: ReactElement
+  if (runId !== null) {
+    page = <RunDetailPage key={runId} runId={runId} />
+  } else if (onDashboard) {
+    page = <DashboardPage />
+  } else {
+    page = <TasksPage />
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <header className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
-        <h1 className="text-xl font-black tracking-tight text-white">
-          <a href="#/">
-            Agent<span className="text-indigo-400">Lens</span>
-          </a>
-        </h1>
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 px-6 py-4">
+        <div className="flex items-center gap-8">
+          <h1 className="text-xl font-black tracking-tight text-white">
+            <a href="#/">
+              Agent<span className="text-indigo-400">Lens</span>
+            </a>
+          </h1>
+          <nav className="flex items-center gap-6 text-sm">
+            <a href="#/" className={navClass(!onDashboard)}>
+              Tasks
+            </a>
+            <a href="#/dashboard" className={navClass(onDashboard)}>
+              Dashboard
+            </a>
+          </nav>
+        </div>
         <div className="flex items-center gap-4 text-sm">
           <span className="text-gray-400">{email}</span>
           <button
@@ -93,13 +122,7 @@ function SignedInLayout({
         </div>
       </header>
 
-      <main>
-        {runId === null ? (
-          <TasksPage />
-        ) : (
-          <RunDetailPage key={runId} runId={runId} />
-        )}
-      </main>
+      <main>{page}</main>
     </div>
   )
 }

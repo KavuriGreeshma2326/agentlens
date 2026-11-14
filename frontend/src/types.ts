@@ -33,6 +33,30 @@ export interface RunStep {
   tokens: number
 }
 
+/** Why a failed run failed, with the step numbers that prove it. */
+export interface Diagnosis {
+  label: string
+  summary: string
+  step_numbers: number[]
+}
+
 export interface RunDetail extends Run {
   steps: RunStep[]
+  diagnosis: Diagnosis | null
+}
+
+export interface VersionStats {
+  agent_version: string
+  runs: number
+  passed: number
+  failed: number
+  pass_rate: number
+  avg_cost: number
+  avg_latency_ms: number
+  failure_counts: Record<string, number>
+}
+
+export interface Stats {
+  total_runs: number
+  versions: VersionStats[]
 }
