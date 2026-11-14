@@ -294,3 +294,15 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why no router and no chart library:** the app has only a few screens, and every new dependency changes `package-lock.json` and can break the CI install. Navigation uses plain state, and charts are drawn with CSS.
 
 **Known gap:** the 8-character minimum password is enforced only in the browser. Anyone calling the API directly can still register a shorter one. The backend should enforce it too.
+
+---
+
+## 17. Tasks page and run polling (Day 3)
+
+**Why polling, not WebSockets:** a run finishes in well under a second, so checking again every second while a run is unfinished is enough. WebSockets would add a persistent connection and a second protocol for almost no benefit. Polling stops by itself when no run is queued or running. If a refresh fails, it also stops, so a broken server does not cause an endless retry loop.
+
+**Why the agent version is one dropdown above the list:** it keeps each task row to a single Run button, and it makes comparing versions easy. Run the same task with both versions and look at the two results.
+
+**Why there is no delete button:** the backend refuses to delete a task that has runs, to protect the recorded traces. A button that mostly shows an error would be worse than no button.
+
+**Known gap:** if the login token expires while the page is open, requests start failing and the error banner appears. Reloading signs you out. A later step should catch the 401 and return to the sign-in screen automatically.

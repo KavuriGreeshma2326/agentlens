@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import AuthScreen from './AuthScreen'
+import TasksPage from './TasksPage'
 import { ApiError, clearToken, getCurrentUser, getToken, setToken } from './api'
 import type { User } from './api'
 
@@ -54,10 +55,10 @@ export default function App() {
     return <AuthScreen onAuthenticated={handleAuthenticated} />
   }
 
-  return <SignedInPlaceholder email={session.user.email} onLogout={handleLogout} />
+  return <SignedInLayout email={session.user.email} onLogout={handleLogout} />
 }
 
-function SignedInPlaceholder({
+function SignedInLayout({
   email,
   onLogout,
 }: {
@@ -82,12 +83,8 @@ function SignedInPlaceholder({
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl p-6">
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-6">
-          <p className="text-sm text-gray-300">
-            You are signed in. Tasks and runs arrive in the next step.
-          </p>
-        </div>
+      <main>
+        <TasksPage />
       </main>
     </div>
   )
