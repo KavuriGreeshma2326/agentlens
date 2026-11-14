@@ -17,4 +17,6 @@ EXPOSE 8000
 
 # Run migrations then start Uvicorn.
 # Uvicorn is started with --host 0.0.0.0 so it's reachable from outside the container.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# It listens on $PORT when the host provides one (Render does) and on 8000
+# otherwise (local Docker Compose).
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

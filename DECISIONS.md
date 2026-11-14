@@ -346,3 +346,11 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why the small-sample warning:** with a handful of runs per version, a gap in pass rate can easily be chance. The dashboard says so below 20 finished runs per version instead of presenting a weak result as a finding.
 
 **What the dashboard result means:** `mock-v2` passes more often than `mock-v1` because the mock agent was written that way. It shows that the comparison works, not that one real agent beats another. A real comparison needs real agents.
+
+---
+
+## 21. Pinned dependencies and the host-provided port (Day 5)
+
+**Why exact versions in requirements.txt:** on Day 1 the installed SQLAlchemy chose a different PostgreSQL driver than the one the requirements file listed, and the backend could not start. Open-ended versions (`>=`) let a fresh build install something different from what was tested. Exact pins make CI, Docker and the deployed service run the same libraries. The trade-off is that updates are manual, which is the right trade for a small project.
+
+**Why the container reads $PORT:** hosting platforms assign the port the app must listen on. The container uses that port when it is set and falls back to 8000 locally, so one image works in both places.
