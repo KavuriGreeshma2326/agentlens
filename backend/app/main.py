@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, health, runs, tasks
+from app.routers import auth, health, runs, stats, tasks
 
 app = FastAPI(
     title="AgentLens API",
@@ -29,3 +29,4 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(runs.router)
+app.include_router(stats.router)

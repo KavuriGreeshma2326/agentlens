@@ -1,8 +1,9 @@
-"""Run router - start a run for a task, and read a run with its steps."""
+"""Run router - start a run, read a run with its steps and diagnosis, list runs."""
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.agent.diagnosis import TraceStep, diagnose
 from app.agent.runner import execute_run
 from app.database import SessionLocal, get_db
 from app.dependencies import get_current_user
@@ -10,7 +11,13 @@ from app.models.run import Run
 from app.models.run_step import RunStep
 from app.models.task import Task
 from app.models.user import User
-from app.schemas.run import RunCreate, RunDetailResponse, RunResponse, RunStepResponse
+from app.schemas.run import (
+    DiagnosisResponse,
+    RunCreate,
+    RunDetailResponse,
+    RunResponse,
+    RunStepResponse,
+)
 
 router = APIRouter(tags=["runs"])
 
@@ -64,7 +71,7 @@ def create_run(
 @router.get(
     "/runs/{run_id}",
     response_model=RunDetailResponse,
-    summary="Get a run with its steps",
+    summary="Get a run with its steps and diagnosis",
 )
 def get_run(
     run_id: int,
@@ -74,7 +81,8 @@ def get_run(
     """Return a run and all its steps. Only the task's owner can read it.
 
     A run owned by someone else gets the same 404 as a run that does not
-    exist, so the API never reveals which run ids exist.
+    exist, so the API never reveals which run ids exist. A failed run also
+    carries a diagnosis worked out from its steps.
     """
     run = (
         db.query(Run)
@@ -93,10 +101,26 @@ def get_run(
         .order_by(RunStep.step_number)
         .all()
     )
+
+    diagnosis = None
+    if run.status == "failed":
+        task = db.get(Task, run.task_id)
+        result = diagnose(
+            [TraceStep(s.step_number, s.step_type, s.content or "") for s in steps],
+            task.expected_output if task is not None else None,
+        )
+        diagnosis = DiagnosisResponse(
+            label=result.label,
+            summary=result.summary,
+            step_numbers=result.step_numbers,
+        )
+
     return RunDetailResponse(
         **RunResponse.model_validate(run).model_dump(),
         steps=[RunStepResponse.model_validate(s) for s in steps],
+        diagnosis=diagnosis,
     )
+
 
 @router.get("/runs", response_model=list[RunResponse], summary="List my runs")
 def list_runs(

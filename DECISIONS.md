@@ -318,3 +318,19 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why each step has a latency bar:** the bar is scaled to the slowest step, so you can see where the time went at a glance. Absolute numbers are in the text beside it.
 
 **Why error lines are red:** a tool result starting with "Error:" is the clearest sign of a wrong tool call, so the viewer makes it stand out. The Day 4 diagnosis will name it formally.
+
+---
+
+## 19. Failure diagnosis and stats (Day 4)
+
+**Why rules over the steps, not a stored label:** the diagnosis reads only the recorded trace. It never sees the mock agent's hidden failure mode, so it behaves like a tool for debugging a real agent.
+
+**Why the rules run in a fixed order:** a trace can match several rules at once. Loops come first, then tool errors, then giving up, then a wrong answer. The first match wins, and the evidence steps (the step numbers that prove the label) come from that rule.
+
+**How accuracy is tested:** one test generates 100+ failing mock runs and checks that the diagnosis recovers the hidden failure mode every time. This proves the code does what it says. It does not prove the rules would hold up on a real agent, whose failures are messier than four clean patterns.
+
+**Known limitation:** the "gave up" rule matches phrases such as "could not" in the final answer. That is brittle with real language. A later version could use an LLM judge for these cases.
+
+**Why stats are computed when requested:** the app has a small amount of data, so calculating pass rates and failure counts on each request is simple and always current. At a larger scale these would be cached or precomputed.
+
+**Why the four main failure labels always appear in the stats:** the dashboard can draw a stable chart with zero-height bars instead of handling missing keys.

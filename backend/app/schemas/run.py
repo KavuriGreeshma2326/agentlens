@@ -35,7 +35,16 @@ class RunResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class DiagnosisResponse(BaseModel):
+    """Why a failed run failed, with the steps that prove it."""
+
+    label: str
+    summary: str
+    step_numbers: list[int]
+
+
 class RunDetailResponse(RunResponse):
-    """A run together with every recorded step, in order."""
+    """A run with every recorded step and, if it failed, a diagnosis."""
 
     steps: list[RunStepResponse] = []
+    diagnosis: DiagnosisResponse | None = None
