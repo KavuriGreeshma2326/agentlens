@@ -287,7 +287,7 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 
 ## 16. Frontend sign-in (Day 3)
 
-**Where the token lives:** `localStorage`. It is simple, and it survives a page reload. The trade-off is that any script running on the page can read it, so a cross-site scripting (XSS) bug would leak the token. The safer alternative is an httpOnly cookie, which JavaScript cannot read, but that needs backend changes and protection against CSRF. React escapes text by default and this app never injects raw HTML, which reduces the XSS risk. Tokens also expire, so a stolen one stops working after a limited time (check the exact lifetime in the backend config before quoting a number).
+**Where the token lives:** `localStorage`. It is simple, and it survives a page reload. The trade-off is that any script running on the page can read it, so a cross-site scripting (XSS) bug would leak the token. The safer alternative is an httpOnly cookie, which JavaScript cannot read, but that needs backend changes and protection against CSRF. React escapes text by default and this app never injects raw HTML, which reduces the XSS risk. Tokens also expire, so a stolen one stops working after a limited time (60 minutes, set by JWT_EXPIRE_MINUTES).
 
 **Why the saved token is checked on load:** the app calls `/auth/me` before showing the signed-in screen. An expired token is cleared and the user lands on the sign-in form instead of seeing a broken page. A network error does not clear the token, so a refresh can recover.
 
@@ -305,9 +305,7 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 
 **Why there is no delete button:** the backend refuses to delete a task that has runs, to protect the recorded traces. A button that mostly shows an error would be worse than no button.
 
-**Known gap:** if the login token expires while the page is open, requests start failing and the error banner appears. Reloading signs you out. A later step should catch the 401 and return to the sign-in screen automatically.
-
----
+**Known gap:** if the login token expires while the page is open, requests start failing and the error banner appears. Reloading signs you out. This was fixed in section 22.
 
 ## 18. Run trace viewer and hash routes (Day 3)
 
@@ -365,4 +363,4 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 
 **Why a 401 signs the user out automatically:** login tokens last 60 minutes. When the server rejects a saved token, the client clears it and fires an event, and the app returns to the sign-in screen with a notice. It only does this when a token was actually sent, so a wrong password on the sign-in form does not count as an expired session.
 
-**Known limit:** the notice only appears the next time the user does something. An open page does not check its token in the background.
+**Known limit:** the notice only appears the next time the user does something. An open page does not check its token in the background.f
