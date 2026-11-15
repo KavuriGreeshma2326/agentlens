@@ -135,8 +135,8 @@ GitHub Actions runs both on every push.
 ## Known limitations
 
 - The agent is simulated. No real model is called.
-- Free hosting sleeps when idle, so the first request can take up to a minute.
-- Login tokens last 60 minutes. After that, the page needs a reload and a new sign-in.
+- Free hosting sleeps when idle, so the first request can take up to a minute. The app shows a notice while it waits.
+- Login tokens last 60 minutes. After that, the app signs you out and asks you to sign in again.
 - The 8-character minimum password is checked only in the browser, not by the API.
 - Runs execute inside the API process. A restart in the middle of a run leaves that run unfinished.
 - The "gave up" diagnosis matches phrases in the final answer, which is brittle with real language.

@@ -4,9 +4,18 @@ import AuthScreen from './AuthScreen'
 import DashboardPage from './DashboardPage'
 import RunDetailPage from './RunDetailPage'
 import TasksPage from './TasksPage'
-import { ApiError, clearToken, getCurrentUser, getToken, setToken } from './api'
+import TopBanner from './TopBanner'
+import {
+  ApiError,
+  UNAUTHORIZED_EVENT,
+  clearToken,
+  getCurrentUser,
+  getToken,
+  setToken,
+} from './api'
 import type { User } from './api'
 import { useHash } from './useHash'
+import { useServerWaking } from './useServerWaking'
 
 type Session =
   | { kind: 'checking' }
@@ -15,6 +24,8 @@ type Session =
 
 export default function App() {
   const [session, setSession] = useState<Session>({ kind: 'checking' })
+  const [notice, setNotice] = useState<string | null>(null)
+  const waking = useServerWaking()
 
   const loadSession = useCallback(async () => {
     if (!getToken()) {
@@ -25,8 +36,9 @@ export default function App() {
       const user = await getCurrentUser()
       setSession({ kind: 'signed-in', user })
     } catch (err: unknown) {
-      // An expired or invalid token is cleared. Other errors (such as the
-      // server being down) leave the token alone so a refresh can recover.
+      // An expired or invalid token is cleared by the API client. Other
+      // errors (such as the server being down) leave the token alone so a
+      // refresh can recover.
       if (err instanceof ApiError && err.status === 401) clearToken()
       setSession({ kind: 'signed-out' })
     }
@@ -36,8 +48,19 @@ export default function App() {
     void loadSession()
   }, [loadSession])
 
+  // The API client fires this event when the server rejects a saved token.
+  useEffect(() => {
+    const onUnauthorized = () => {
+      setNotice('Your session expired. Please sign in again.')
+      setSession({ kind: 'signed-out' })
+    }
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+  }, [])
+
   function handleAuthenticated(token: string) {
     setToken(token)
+    setNotice(null)
     setSession({ kind: 'checking' })
     void loadSession()
   }
@@ -47,19 +70,34 @@ export default function App() {
     setSession({ kind: 'signed-out' })
   }
 
+  let screen: ReactElement
   if (session.kind === 'checking') {
-    return (
+    screen = (
       <div className="flex min-h-screen items-center justify-center bg-gray-950 text-sm text-gray-500">
         Loading...
       </div>
     )
+  } else if (session.kind === 'signed-out') {
+    screen = <AuthScreen onAuthenticated={handleAuthenticated} />
+  } else {
+    screen = (
+      <SignedInLayout email={session.user.email} onLogout={handleLogout} />
+    )
   }
 
-  if (session.kind === 'signed-out') {
-    return <AuthScreen onAuthenticated={handleAuthenticated} />
-  }
-
-  return <SignedInLayout email={session.user.email} onLogout={handleLogout} />
+  return (
+    <>
+      {waking ? (
+        <TopBanner tone="info">
+          Waking up the server. The free host sleeps when idle, so the first
+          request can take up to a minute.
+        </TopBanner>
+      ) : notice ? (
+        <TopBanner tone="warning">{notice}</TopBanner>
+      ) : null}
+      {screen}
+    </>
+  )
 }
 
 function navClass(active: boolean): string {

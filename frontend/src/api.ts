@@ -5,6 +5,12 @@ export const API_URL: string =
 
 const TOKEN_KEY = 'agentlens_token'
 
+/** A request that takes longer than this is reported as "slow". */
+const SLOW_REQUEST_MS = 3000
+
+/** Fired on the window when the server rejects a saved token (HTTP 401). */
+export const UNAUTHORIZED_EVENT = 'agentlens:unauthorized'
+
 export interface User {
   email: string
 }
@@ -53,6 +59,29 @@ export function clearToken(): void {
   }
 }
 
+// -- Slow request tracking ----------------------------------------------------
+// A free host goes to sleep when idle and can take up to a minute to wake.
+// The UI subscribes here so it can say what is happening instead of showing
+// a blank screen.
+
+type SlowListener = (slow: boolean) => void
+
+const slowListeners = new Set<SlowListener>()
+let slowCount = 0
+
+function notifySlow(): void {
+  for (const listener of slowListeners) listener(slowCount > 0)
+}
+
+/** Call `listener` whenever "a request is taking unusually long" changes. */
+export function subscribeSlow(listener: SlowListener): () => void {
+  slowListeners.add(listener)
+  listener(slowCount > 0)
+  return () => {
+    slowListeners.delete(listener)
+  }
+}
+
 // -- Requests -----------------------------------------------------------------
 
 async function errorMessage(res: Response): Promise<string> {
@@ -78,11 +107,31 @@ export async function apiRequest<T>(
   const token = getToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
+  // If the server takes a while to answer, tell the UI.
+  const timing = { reportedSlow: false }
+  const slowTimer = setTimeout(() => {
+    timing.reportedSlow = true
+    slowCount += 1
+    notifySlow()
+  }, SLOW_REQUEST_MS)
+
   let res: Response
   try {
     res = await fetch(`${API_URL}${path}`, { ...init, headers })
   } catch {
     throw new ApiError(0, 'Could not reach the server. Is the backend running?')
+  } finally {
+    clearTimeout(slowTimer)
+    if (timing.reportedSlow) {
+      slowCount -= 1
+      notifySlow()
+    }
+  }
+
+  if (res.status === 401 && token) {
+    // The saved token was rejected (expired or invalid): sign the user out.
+    clearToken()
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
   }
 
   if (!res.ok) throw new ApiError(res.status, await errorMessage(res))

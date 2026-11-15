@@ -354,3 +354,15 @@ you compose utilities directly in the JSX: `className="rounded-2xl bg-gray-900 p
 **Why exact versions in requirements.txt:** on Day 1 the installed SQLAlchemy chose a different PostgreSQL driver than the one the requirements file listed, and the backend could not start. Open-ended versions (`>=`) let a fresh build install something different from what was tested. Exact pins make CI, Docker and the deployed service run the same libraries. The trade-off is that updates are manual, which is the right trade for a small project.
 
 **Why the container reads $PORT:** hosting platforms assign the port the app must listen on. The container uses that port when it is set and falls back to 8000 locally, so one image works in both places.
+
+---
+
+## 22. Cold-start notice and automatic sign-out (Day 5)
+
+**Why a "waking up" banner:** the free host sleeps when idle and can take up to a minute to answer the first request. Without a message, that looks like a broken site. The API client times each request and reports one as slow after 3 seconds, and a banner explains what is happening. It disappears by itself when the request finishes.
+
+**Why the client reports slowness through a small subscription instead of every page handling it:** every request already passes through one function, so one place can measure them all. Pages stay unaware of it.
+
+**Why a 401 signs the user out automatically:** login tokens last 60 minutes. When the server rejects a saved token, the client clears it and fires an event, and the app returns to the sign-in screen with a notice. It only does this when a token was actually sent, so a wrong password on the sign-in form does not count as an expired session.
+
+**Known limit:** the notice only appears the next time the user does something. An open page does not check its token in the background.
